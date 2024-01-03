@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera App with Silhouette Overlay</title>
+    <style>
+        #camera-container {
+            position: relative;
+        }
+        #camera-feed {
+            width: 100%;
+        }
+        #silhouette-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('silhouette.svg'); /* path to your silhouette image */
+            background-size: contain; /* Change from 'cover' to 'contain' */
+            background-repeat: no-repeat; /* Prevents the image from repeating */
+            background-position: center center; /* Centers the silhouette */
+            opacity: 0.5; /* adjust as needed */
+        }
+    </style>
+</head>
+<body>
+    <div id="camera-container">
+        <video id="camera-feed"></video>
+        <div id="silhouette-overlay"></div>
+    </div>
+    <button id="capture-btn">Capture Photo</button>
+    <div id="captured-images-container" style="display: flex; flex-wrap: nowrap; overflow-x: auto; width: 100%;"></div>
+
+
+
+
+    <script>
+        const video = document.getElementById('camera-feed');
+        const button = document.getElementById('capture-btn');
+
+        // Access the camera
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                video.srcObject = stream;
+                video.play();
+            });
+        }
+
+        // Add functionality to capture button
+        button.addEventListener('click', function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = canvas.toDataURL('image/png');
+
+            // Create an image element using the imageData
+            let img = document.createElement('img');
+            img.src = imageData;
+            img.alt = 'Captured image';
+            img.style = 'max-width: 100px; height: auto; margin-right: 10px;'; // Set a maximum width for each image
+
+            // Append the image to the captured images container
+            const imagesContainer = document.getElementById('captured-images-container');
+            imagesContainer.appendChild(img);
+        });
+
+
+    </script>
+</body>
+</html>
