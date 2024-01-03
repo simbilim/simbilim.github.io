@@ -56,6 +56,11 @@
         const lightMessageElement = document.getElementById('light-message');
         const imagesContainer = document.getElementById('captured-images-container');
       
+        function setCanvasSize(canvas) {
+            canvas.width = window.innerWidth * 0.9;
+            canvas.height = window.innerHeight * 0.9;
+        }
+
         // Access the camera
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
