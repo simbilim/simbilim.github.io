@@ -32,17 +32,19 @@
             padding: 10px;
             border-radius: 5px;
             display: none; /* Hidden by default */
+            z-index: 100; /* Make sure it's on top */
         }
 
     </style>
 </head>
 <body>
-    <div id="light-message"></div>
+    
     <div id="camera-container">
         <video id="camera-feed"></video>
         <div id="silhouette-overlay"></div>
     </div>
     <button id="capture-btn">Capture Photo</button>
+    <div id="light-message"></div>
     <div id="captured-images-container" style="display: flex; flex-wrap: nowrap; overflow-x: auto; width: 100%;"></div>
 
 
@@ -51,77 +53,65 @@
     <script>
         const video = document.getElementById('camera-feed');
         const button = document.getElementById('capture-btn');
-
-        // Access the camera
-if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
-        video.srcObject = stream;
-        video.play();
-    });
-}
-
-// Function to check light level
-function checkLightLevel(context, width, height) {
-    const imageData = context.getImageData(0, 0, width, height);
-    const data = imageData.data;
-    let r, g, b, avg;
-    let total = 0;
-
-    for (let x = 0, len = data.length; x < len; x += 4) {
-        r = data[x];
-        g = data[x + 1];
-        b = data[x + 2];
-
-        avg = Math.floor((r + g + b) / 3);
-        total += avg;
-    }
-
-    const brightness = total / (width * height);
-    return brightness;
-}
-
-// Add functionality to capture button
-button.addEventListener('click', function() {
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Check light level before capturing the image
-    const brightness = checkLightLevel(context, canvas.width, canvas.height);
-    const sufficientLightThreshold = 0.456 * 255; // Converted to pixel brightness scale
-    const lightMessageElement = document.getElementById('light-message');
-
-    if (brightness < sufficientLightThreshold) {
-        lightMessageElement.textContent = 'Lighting is insufficient for a good picture. Please increase the light.';
-        lightMessageElement.style.display = 'block'; // Show the message
-    } else {
-        lightMessageElement.textContent = 'Lighting is good. Ready to take a picture.';
-        lightMessageElement.style.display = 'block'; // Show the message
-    }
-
-    // Proceed with image capture only if the light is sufficient
-    if (brightness >= sufficientLightThreshold) {
-        const imageData = canvas.toDataURL('image/png');
-
-        // Create an image element using the imageData
-        let img = document.createElement('img');
-        img.src = imageData;
-        img.alt = 'Captured image';
-        img.style = 'max-width: 100px; height: auto; margin-right: 10px;'; // Set a maximum width for each image
-
-        // Append the image to the captured images container
+        const lightMessageElement = document.getElementById('light-message');
         const imagesContainer = document.getElementById('captured-images-container');
-        imagesContainer.appendChild(img);
-    }
-
-    // Hide the message after some time
-    setTimeout(() => { lightMessageElement.style.display = 'none'; }, 5000);
-});
-
-
-
-    </script>
+      
+        // Access the camera
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                video.srcObject = stream;
+                video.play();
+            });
+        }
+      
+        // Function to check light level
+        function checkLightLevel(context, width, height) {
+            const imageData = context.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            let total = 0;
+      
+            for (let i = 0; i < data.length; i += 4) {
+                total += (data[i] + data[i + 1] + data[i + 2]) / 3;
+            }
+      
+            const brightness = total / (data.length / 4);
+            return brightness;
+        }
+      
+        // Add functionality to capture button
+        button.addEventListener('click', function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+            // Check light level before capturing the image
+            const brightness = checkLightLevel(context, canvas.width, canvas.height);
+            const sufficientLightThreshold = 0.456 * 255; // Converted to pixel brightness scale
+      
+            if (brightness < sufficientLightThreshold) {
+                lightMessageElement.textContent = 'Lighting is insufficient for a good picture. Please increase the light.';
+                lightMessageElement.style.display = 'block'; // Show the message
+            } else {
+                lightMessageElement.textContent = 'Lighting is good. Ready to take a picture.';
+                lightMessageElement.style.display = 'block'; // Show the message
+      
+                // Create an image element using the imageData
+                const imageData = canvas.toDataURL('image/png');
+                let img = document.createElement('img');
+                img.src = imageData;
+                img.alt = 'Captured image';
+                img.style = 'max-width: 100px; height: auto; margin-right: 10px;'; // Set a maximum width for each image
+      
+                // Append the image to the captured images container
+                imagesContainer.appendChild(img);
+            }
+      
+            // Hide the message after some time
+            setTimeout(() => { lightMessageElement.style.display = 'none'; }, 5000);
+        });
+      </script>
+      
 </body>
 </html>
