@@ -47,6 +47,31 @@
             });
         }
 
+        function checkLightLevel() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            let r, g, b, avg;
+            let total = 0;
+
+            for (let x = 0, len = data.length; x < len; x += 4) {
+                r = data[x];
+                g = data[x + 1];
+                b = data[x + 2];
+
+                avg = Math.floor((r + g + b) / 3);
+                total += avg;
+            }
+
+            const brightness = total / (imageData.width * imageData.height);
+            return brightness;
+        }
+
         // Add functionality to capture button
         button.addEventListener('click', function() {
             const canvas = document.createElement('canvas');
@@ -66,6 +91,18 @@
             // Append the image to the captured images container
             const imagesContainer = document.getElementById('captured-images-container');
             imagesContainer.appendChild(img);
+
+            const brightness = checkLightLevel();
+            const sufficientLightThreshold = 0.456 * 255; // Converted to pixel brightness scale
+
+            if (brightness < sufficientLightThreshold) {
+                console.log('Lighting is insufficient.');
+                // Here you can change some DOM element to inform the user
+            } else {
+                console.log('Lighting is sufficient.');
+                // Proceed with capturing the photo
+            }
+
         });
 
 
